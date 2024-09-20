@@ -6,6 +6,7 @@ import Spinner from "../components/Spinner";
 import { signIn, signOut, useSession } from "next-auth/react"
 import Success from "../components/Success";
 import toast from "react-hot-toast";
+import { SignedIn, SignedOut, SignIn, SignInButton } from "@clerk/nextjs";
 
 export default function Cart() {
   const { cartProducts, removeProduct, addProduct, clearCart } = useContext(CartContext);
@@ -17,7 +18,6 @@ export default function Cart() {
   const [country, setCountry] = useState('');
   const [zip, setZip] = useState('');
   const [loading, setLoading] = useState(true);
-  const { data: session } = useSession();
   const [isSuccess, setIsSuccess] = useState(false)
 
   useEffect(() => {
@@ -73,27 +73,15 @@ export default function Cart() {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  async function stripeCheckout() {
-    const response = await axios.post('/api/checkout', {
-      email: session.user.email, name: session.user.name, address, country, zip, city, cartProducts
-    });
-
-    if (response.data.url) {
-      window.location = response.data.url
-    } else {
-      toast.error('An error occured!!')
-    }
-  }
-
   if (isSuccess) {
     return <>
       <Success />
     </>
   }
 
-  if (session) {
-    return <>
 
+  return <>
+    <SignedIn>
       <section className="flex justify-between max-md:flex-col space-x-4 ">
         <div className=" md:w-2/3  px-4">
           <div className=" mt-16 md:mt-6 ">
@@ -238,14 +226,14 @@ export default function Cart() {
                 <div class="grid grid-cols-12 gap-5">
                   <div class="col-span-6">
                     <label class="mb-1 block text-sm font-medium text-text">Email</label>
-                    <input type="email" name="email" class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500" value={session.user.email}
+                    <input type="email" name="email" class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder='Email'
                     />
 
                   </div>
                   <div class="col-span-6">
                     <label class="mb-1 block text-sm font-medium text-text">Full Name</label>
-                    <input type="text" name="name" class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500" value={session.user.name}
+                    <input type="text" name="name" class="block w-full rounded-md p-3 border border-gray-300 shadow-sm focus:border-primary-400 focus:ring focus:ring-primary-200 focus:ring-opacity-50 disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500"
                       placeholder='Full name'
                     />
                   </div>
@@ -284,7 +272,6 @@ export default function Cart() {
                   </div>
                   <div class="col-span-12 text-center w-full">
                     <button
-                      onClick={stripeCheckout}
                       className="disabled block rounded bg-secondary px-5 py-3 text-md text-text transition hover:bg-purple-300 w-full"
                     >
                       Checkout
@@ -298,22 +285,18 @@ export default function Cart() {
         )}
 
       </section>
-    </>
-  }
+    </SignedIn>
+  <SignedOut>
 
-  return <>
     <div className="grid h-screen px-4 bg-white place-content-center">
       <div className="text-center">
 
         <p className="mt-4 text-text text-2xl">You should sign Up to view cart Items</p>
-
-        <button
-          onClick={() => signIn('google')}
-          className="inline-block px-5 py-3 mt-6 text-sm font-medium text-text bg-primary rounded hover:bg-primary focus:outline-none focus:ring"
-        >
-          Login / Register
-        </button>
+        <SignInButton className="inline-block px-5 py-3 mt-6 text-sm font-medium text-text bg-primary rounded hover:bg-primary focus:outline-none focus:ring">
+        Login / Register
+        </SignInButton>
       </div>
     </div>
+  </SignedOut>
   </>
 }
